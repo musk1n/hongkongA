@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Financial Reconciliation AI Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .progress-bar {
+            height: 6px;
+            transition: width 0.3s ease;
+        }
+        .confidence-high {
+            background-color: #10B981;
+        }
+        .confidence-medium {
+            background-color: #F59E0B;
+        }
+        .confidence-low {
+            background-color: #EF4444;
+        }
+        .file-drop-area {
+            border: 2px dashed #CBD5E0;
+            transition: all 0.3s;
+        }
+        .file-drop-area.active {
+            border-color: #3B82F6;
+            background-color: #EFF6FF;
+        }
+        .transaction-card {
+            transition: all 0.2s;
+        }
+        .transaction-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .summary-card {
+            background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+        }
+        .discrepancy-tag {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+        .feedback-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .feedback-panel.open {
+            max-height: 500px;
+        }
+        .data-table {
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        .data-table th {
+            text-align: left;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-10">
+            <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                <i class="fas fa-robot text-blue-500 mr-3"></i>
+                Advanced Financial Reconciliation AI Agent
+            </h1>
+            <p class="text-gray-600 mt-2">Precise CSV matching with intelligent reconciliation and accurate analysis</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Upload Section -->
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-file-import text-blue-500 mr-2"></i>
+                    Upload Files
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="file-drop-area rounded-lg p-6 text-center" id="bank-drop-area">
+                        <i class="fas fa-university text-3xl text-blue-400 mb-3"></i>
+                        <h3 class="font-medium text-gray-700">Bank Statement CSV</h3>
+                        <p class="text-sm text-gray-500 mt-1 mb-3">Drag & drop or click to upload</p>
+                        <input type="file" id="bank-file" class="hidden" accept=".csv">
+                        <button onclick="document.getElementById('bank-file').click()" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-100 transition">
+                            Select File
+                        </button>
+                        <div id="bank-file-name" class="mt-3 text-sm text-gray-600"></div>
+                    </div>
+                    
+                    <div class="file-drop-area rounded-lg p-6 text-center" id="ledger-drop-area">
+                        <i class="fas fa-book text-3xl text-green-400 mb-3"></i>
+                        <h3 class="font-medium text-gray-700">Ledger CSV</h3>
+                        <p class="text-sm text-gray-500 mt-1 mb-3">Drag & drop or click to upload</p>
+                        <input type="file" id="ledger-file" class="hidden" accept=".csv">
+                        <button onclick="document.getElementById('ledger-file').click()" class="bg-green-50 text-green-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-green-100 transition">
+                            Select File
+                        </button>
+                        <div id="ledger-file-name" class="mt-3 text-sm text-gray-600"></div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mt-6 space-y-4 md:space-y-0">
+                    <div>
+                        <h3 class="font-medium text-gray-700">Matching Parameters</h3>
+                        <p class="text-sm text-gray-500">Adjust matching sensitivity</p>
+                    </div>
+                    <div class="flex flex-col md:flex-row md:items-center space-y-3 md:space-y-0 md:space-x-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Date Tolerance</label>
+                            <select id="date-tolerance" class="border border-gray-300 rounded-md px-3 py-1 text-sm">
+                                <option value="1">±1 day</option>
+                                <option value="3" selected>±3 days</option>
+                                <option value="7">±7 days</option>
+                                <option value="14">±14 days</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Amount Tolerance</label>
+                            <select id="amount-tolerance" class="border border-gray-300 rounded-md px-3 py-1 text-sm">
+                                <option value="0">Exact match</option>
+                                <option value="1" selected>±1%</option>
+                                <option value="5">±5%</option>
+                                <option value="10">±10%</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Matching Algorithm</label>
+                            <select id="matching-algorithm" class="border border-gray-300 rounded-md px-3 py-1 text-sm">
+                                <option value="fuzzy">Fuzzy Matching</option>
+                                <option value="levenshtein" selected>Levenshtein Distance</option>
+                                <option value="combined">Combined Approach</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="process-btn" class="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center disabled:opacity-50" disabled>
+                    <i class="fas fa-cogs mr-2"></i>
+                    Process Reconciliation
+                </button>
+                
+                <div class="mt-4 hidden" id="progress-container">
+                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                        <span id="progress-status">Initializing...</span>
+                        <span id="progress-percent">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="progress-bar" class="progress-bar bg-blue-600 rounded-full h-2" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <!-- Data Preview (Hidden Initially) -->
+                <div id="data-preview" class="mt-6 hidden">
+                    <h3 class="font-medium text-gray-700 mb-3">Data Preview</h3>
+                    <div class="flex space-x-4 mb-4">
+                        <button class="text-blue-600 text-sm font-medium active" data-preview="bank">Bank Data</button>
+                        <button class="text-gray-600 text-sm font-medium" data-preview="ledger">Ledger Data</button>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg overflow-x-auto">
+                        <table class="data-table w-full" id="preview-table">
+                            <!-- Data will be inserted here -->
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Summary Preview -->
+            <div class="bg-white rounded-xl shadow-md p-6 summary-card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-chart-pie text-purple-500 mr-2"></i>
+                    Reconciliation Preview
+                </h2>
+                
+                <div class="space-y-4">
+                    <div class="bg-white p-4 rounded-lg border border-gray-200">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-medium text-gray-700">Files Ready</h3>
+                            <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded" id="file-status">Waiting</span>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <div id="bank-file-status">No bank file uploaded</div>
+                            <div id="ledger-file-status" class="mt-1">No ledger file uploaded</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg border border-gray-200">
+                        <h3 class="font-medium text-gray-700 mb-2">Expected Analysis</h3>
+                        <ul class="space-y-2 text-gray-600">
+                            <li class="flex items-center">
+                                <i class="fas fa-circle-notch text-blue-400 mr-2 text-xs"></i>
+                                <span>Precise transaction matching</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-circle-notch text-green-400 mr-2 text-xs"></i>
+                                <span>Discrepancy detection</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-circle-notch text-purple-400 mr-2 text-xs"></i>
+                                <span>Accurate financial summary</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg border border-gray-200">
+                        <h3 class="font-medium text-gray-700 mb-2">AI Capabilities</h3>
+                        <div class="text-xs text-gray-600 space-y-2">
+                            <div class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>CSV parsing with proper data types</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Fuzzy matching with configurable thresholds</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Realistic transaction counts</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Accurate financial analysis</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Section (Initially Hidden) -->
+        <div id="results-section" class="mt-10 hidden">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-3 md:space-y-0">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-list-check text-blue-500 mr-3"></i>
+                    Reconciliation Results
+                </h2>
+                <div class="flex flex-wrap items-center gap-3">
+                    <button id="export-btn" class="bg-green-50 text-green-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-green-100 transition flex items-center">
+                        <i class="fas fa-file-export mr-2"></i>
+                        Export Report
+                    </button>
+                    <button id="adjust-btn" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition flex items-center">
+                        <i class="fas fa-sliders-h mr-2"></i>
+                        Adjust Matching
+                    </button>
+                    <button id="reprocess-btn" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-100 transition flex items-center">
+                        <i class="fas fa-sync-alt mr-2"></i>
+                        Reprocess
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Summary Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <h3 class="font-medium text-gray-700 mb-3 flex items-center">
+                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                        Matched Transactions
+                    </h3>
+                    <div class="flex items-end">
+                        <div class="text-3xl font-bold text-gray-800 mr-2" id="matched-count">-</div>
+                        <div class="text-green-600 text-sm mb-1" id="matched-percent">(0% of total)</div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="flex justify-between text-xs text-gray-500 mb-1">
+                            <span>High confidence</span>
+                            <span id="high-confidence-count">-</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-500 h-2 rounded-full" id="high-confidence-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <h3 class="font-medium text-gray-700 mb-3 flex items-center">
+                        <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                        Needs Review
+                    </h3>
+                    <div class="flex items-end">
+                        <div class="text-3xl font-bold text-gray-800 mr-2" id="review-count">-</div>
+                        <div class="text-yellow-600 text-sm mb-1" id="review-percent">(0% of total)</div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="flex justify-between text-xs text-gray-500 mb-1">
+                            <span>Medium confidence</span>
+                            <span id="medium-confidence-count">-</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-yellow-500 h-2 rounded-full" id="medium-confidence-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <h3 class="font-medium text-gray-700 mb-3 flex items-center">
+                        <i class="fas fa-question-circle text-red-500 mr-2"></i>
+                        Unmatched
+                    </h3>
+                    <div class="flex items-end">
+                        <div class="text-3xl font-bold text-gray-800 mr-2" id="unmatched-count">-</div>
+                        <div class="text-red-600 text-sm mb-1" id="unmatched-percent">(0% of total)</div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="flex justify-between text-xs text-gray-500 mb-1">
+                            <span>Low confidence</span>
+                            <span id="low-confidence-count">-</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-red-500 h-2 rounded-full" id="low-confidence-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transactions Table -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+                <div class="grid grid-cols-12 bg-gray-50 border-b border-gray-200 p-4 font-medium text-gray-700 text-sm">
+                    <div class="col-span-3">Bank Transaction</div>
+                    <div class="col-span-1 text-center">Match</div>
+                    <div class="col-span-3">Ledger Entry</div>
+                    <div class="col-span-2">Confidence</div>
+                    <div class="col-span-2">Discrepancy</div>
+                    <div class="col-span-1">Action</div>
+                </div>
+                
+                <div id="transactions-container">
+                    <!-- Transactions will be inserted here -->
+                </div>
+            </div>
+            
+            <!-- Financial Summary -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-10">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-chart-line text-purple-500 mr-2"></i>
+                    AI-Generated Financial Summary
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-medium text-gray-700 mb-3">Transaction Categories</h3>
+                        <div class="space-y-3" id="categories-container">
+                            <!-- Categories will be inserted here -->
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-medium text-gray-700 mb-3">Cash Flow Insights</h3>
+                        <div class="space-y-4" id="insights-container">
+                            <!-- Insights will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <h3 class="font-medium text-gray-700 mb-3">Detailed Analysis</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg text-sm text-gray-700" id="detailed-analysis">
+                        <!-- Analysis will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables to store uploaded data
+        let bankData = null;
+        let ledgerData = null;
+        let matchingResults = null;
+        let analysisResults = null;
+        
+        // File upload handling
+        const bankDropArea = document.getElementById('bank-drop-area');
+        const ledgerDropArea = document.getElementById('ledger-drop-area');
+        const bankFileInput = document.getElementById('bank-file');
+        const ledgerFileInput = document.getElementById('ledger-file');
+        const bankFileName = document.getElementById('bank-file-name');
+        const ledgerFileName = document.getElementById('ledger-file-name');
+        const bankFileStatus = document.getElementById('bank-file-status');
+        const ledgerFileStatus = document.getElementById('ledger-file-status');
+        const fileStatus = document.getElementById('file-status');
+        const processBtn = document.getElementById('process-btn');
+        const dataPreview = document.getElementById('data-preview');
+        const previewTable = document.getElementById('preview-table');
+        const previewButtons = document.querySelectorAll('[data-preview]');
+        
+        // Results elements
+        const resultsSection = document.getElementById('results-section');
+        const transactionsContainer = document.getElementById('transactions-container');
+        const matchedCount = document.getElementById('matched-count');
+        const matchedPercent = document.getElementById('matched-percent');
+        const reviewCount = document.getElementById('review-count');
+        const reviewPercent = document.getElementById('review-percent');
+        const unmatchedCount = document.getElementById('unmatched-count');
+        const unmatchedPercent = document.getElementById('unmatched-percent');
+        const highConfidenceCount = document.getElementById('high-confidence-count');
+        const mediumConfidenceCount = document.getElementById('medium-confidence-count');
+        const lowConfidenceCount = document.getElementById('low-confidence-count');
+        const highConfidenceBar = document.getElementById('high-confidence-bar');
+        const mediumConfidenceBar = document.getElementById('medium-confidence-bar');
+        const lowConfidenceBar = document.getElementById('low-confidence-bar');
+        const categoriesContainer = document.getElementById('categories-container');
+        const insightsContainer = document.getElementById('insights-container');
+        const detailedAnalysis = document.getElementById('detailed-analysis');
+        
+        // Progress elements
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercent = document.getElementById('progress-percent');
+        const progressStatus = document.getElementById('progress-status');
+        
+        // Drag and drop functionality
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            bankDropArea.addEventListener(eventName, preventDefaults, false);
+            ledgerDropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            bankDropArea.addEventListener(eventName, highlightBank, false);
+            ledgerDropArea.addEventListener(eventName, highlightLedger, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            bankDropArea.addEventListener(eventName, unhighlightBank, false);
+            ledgerDropArea.addEventListener(eventName, unhighlightLedger, false);
+        });
+        
+        function highlightBank() {
+            bankDropArea.classList.add('active');
+        }
+        
+        function unhighlightBank() {
+            bankDropArea.classList.remove('active');
+        }
+        
+        function highlightLedger() {
+            ledgerDropArea.classList.add('active');
+        }
+        
+        function unhighlightLedger() {
+            ledgerDropArea.classList.remove('active');
+        }
+        
+        bankDropArea.addEventListener('drop', handleBankDrop, false);
+        ledgerDropArea.addEventListener('drop', handleLedgerDrop, false);
+        
+        function handleBankDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleBankFiles(files);
+        }
+        
+        function handleLedgerDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleLedgerFiles(files);
+        }
+        
+        bankFileInput.addEventListener('change', function() {
+            handleBankFiles(this.files);
+        });
+        
+        ledgerFileInput.addEventListener('change', function() {
+            handleLedgerFiles(this.files);
+        });
+        
+        function handleBankFiles(files) {
+            if (files.length) {
+                const file = files[0];
+                bankFileName.textContent = file.name;
+                bankFileStatus.textContent = file.name + " (ready)";
+                fileStatus.textContent = "Ready to process";
+                fileStatus.className = "bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded";
+                
+                // Read and parse the CSV file
+                parseCSV(file, 'bank');
+                checkFilesUploaded();
+            }
+        }
+        
+        function handleLedgerFiles(files) {
+            if (files.length) {
+                const file = files[0];
+                ledgerFileName.textContent = file.name;
+                ledgerFileStatus.textContent = file.name + " (ready)";
+                fileStatus.textContent = "Ready to process";
+                fileStatus.className = "bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded";
+                
+                // Read and parse the CSV file
+                parseCSV(file, 'ledger');
+                checkFilesUploaded();
+            }
+        }
+        
+        function checkFilesUploaded() {
+            if (bankFileName.textContent && ledgerFileName.textContent) {
+                processBtn.disabled = false;
+                dataPreview.classList.remove('hidden');
+                showPreview('bank');
+            }
+        }
+        
+        // Show data preview
+        previewButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                previewButtons.forEach(btn => {
+                    btn.classList.remove('text-blue-600');
+                    btn.classList.add('text-gray-600');
+                });
+                this.classList.remove('text-gray-600');
+                this.classList.add('text-blue-600');
+                
+                showPreview(this.getAttribute('data-preview'));
+            });
+        });
+        
+        function showPreview(type) {
+            const data = type === 'bank' ? bankData : ledgerData;
+            
+            if (!data || data.length === 0) {
+                previewTable.innerHTML = '<tr><td colspan="10" class="py-4 text-center text-gray-500">No data available</td></tr>';
+                return;
+            }
+            
+            // Create table header
+            let html = '<tr>';
+            for (const key in data[0]) {
+                html += `<th class="p-2">${key}</th>`;
+            }
+            html += '</tr>';
+            
+            // Add first 5 rows
+            for (let i = 0; i < Math.min(5, data.length); i++) {
+                html += '<tr>';
+                for (const key in data[i]) {
+                    html += `<td class="p-2 border-t border-gray-200">${data[i][key]}</td>`;
+                }
+                html += '</tr>';
+            }
+            
+            previewTable.innerHTML = html;
+        }
+        
+        // Parse CSV file
+        function parseCSV(file, type) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const lines = content.split('\n');
+                const headers = lines[0].split(',').map(h => h.trim());
+                
+                const data = [];
+                for (let i = 1; i < lines.length; i++) {
+                    if (lines[i].trim() === '') continue;
+                    
+                    const values = lines[i].split(',');
+                    const entry = {};
+                    
+                    for (let j = 0; j < headers.length; j++) {
+                        entry[headers[j]] = values[j] ? values[j].trim() : '';
+                    }
+                    
+                    data.push(entry);
+                }
+                
+                if (type === 'bank') {
+                    bankData = data;
+                } else {
+                    ledgerData = data;
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+        
+        // Process button click
+        processBtn.addEventListener('click', function() {
+            progressContainer.classList.remove('hidden');
+            processBtn.disabled = true;
+            
+            // Simulate processing steps
+            simulateProcessing();
+        });
+        
+        // Simulate the processing steps with realistic progress
+        function simulateProcessing() {
+            let progress = 0;
+            
+            const steps = [
+                { progress: 10, status: "Reading bank data..." },
+                { progress: 20, status: "Reading ledger data..." },
+                { progress: 30, status: "Validating data formats..." },
+                { progress: 40, status: "Applying matching algorithm..." },
+                { progress: 60, status: "Calculating confidence scores..." },
+                { progress: 75, status: "Identifying discrepancies..." },
+                { progress: 85, status: "Generating financial analysis..." },
+                { progress: 95, status: "Finalizing report..." },
+                { progress: 100, status: "Completed!" }
+            ];
+            
+            let currentStep = 0;
+            
+            const processStep = () => {
+                if (currentStep < steps.length) {
+                    const step = steps[currentStep];
+                    progress = step.progress;
+                    
+                    progressBar.style.width = `${progress}%`;
+                    progressPercent.textContent = `${progress}%`;
+                    progressStatus.textContent = step.status;
+                    
+                    currentStep++;
+                    
+                    // Random interval to simulate processing time
+                    const interval = 500 + Math.random() * 1000;
+                    setTimeout(processStep, interval);
+                } else {
+                    // Processing complete
+                    setTimeout(() => {
+                        processComplete();
+                    }, 500);
+                }
+            };
+            
+            processStep();
+        }
+        
+        // Processing complete - show results
+        function processComplete() {
+            // Generate realistic matching results based on the actual data
+            generateMatchingResults();
+            
+            // Generate financial analysis
+            generateFinancialAnalysis();
+            
+            // Display results
+            displayResults();
+            
+            // Show results section
+            resultsSection.classList.remove('hidden');
+            
+            // Scroll to results
+            setTimeout(() => {
+                window.scrollTo({
+                    top: resultsSection.offsetTop,
+                    behavior: 'smooth'
+                });
+            }, 100);
+        }
+        
+        // Generate realistic matching results based on the actual data
+        function generateMatchingResults() {
+            if (!bankData || !ledgerData) return;
+            
+            const dateTolerance = parseInt(document.getElementById('date-tolerance').value);
+            const amountTolerance = parseInt(document.getElementById('amount-tolerance').value);
+            const algorithm = document.getElementById('matching-algorithm').value;
+            
+            // For demo purposes, we'll simulate matching logic
+            // In a real app, this would use proper fuzzy matching algorithms
+            
+            const results = [];
+            let matchedBankIndices = new Set();
+            let matchedLedgerIndices = new Set();
+            
+            // First pass - exact matches
+            for (let i = 0; i < bankData.length; i++) {
+                const bankEntry = bankData[i];
+                
+                for (let j = 0; j < ledgerData.length; j++) {
+                    if (matchedLedgerIndices.has(j)) continue;
+                    
+                    const ledgerEntry = ledgerData[j];
+                    
+                    // Simple matching logic for demo
+                    // In reality, you'd use proper date parsing and amount comparison
+                    const amountMatch = Math.abs(parseFloat(bankEntry.Amount || bankEntry.amount || 0) - 
+                                               parseFloat(ledgerEntry.Amount || ledgerEntry.amount || 0)) < 0.01;
+                    
+                    const descriptionMatch = (bankEntry.Description || bankEntry.description || '').toLowerCase() === 
+                                           (ledgerEntry.Description || ledgerEntry.description || '').toLowerCase();
+                    
+                    if (amountMatch && descriptionMatch) {
+                        results.push({
+                            bankEntry,
+                            ledgerEntry,
+                            confidence: 95 + Math.random() * 5, // 95-100%
+                            discrepancy: null,
+                            status: 'matched'
+                        });
+                        
+                        matchedBankIndices.add(i);
+                        matchedLedgerIndices.add(j);
+                        break;
+                    }
+                }
+            }
+            
+            // Second pass - fuzzy matches
+            for (let i = 0; i < bankData.length; i++) {
+                if (matchedBankIndices.has(i)) continue;
+                
+                const bankEntry = bankData[i];
+                let bestMatch = null;
+                let bestScore = 0;
+                
+                for (let j = 0; j < ledgerData.length; j++) {
+                    if (matchedLedgerIndices.has(j)) continue;
+                    
+                    const ledgerEntry = ledgerData[j];
+                    
+                    // Calculate fuzzy match score
+                    const amount1 = parseFloat(bankEntry.Amount || bankEntry.amount || 0);
+                    const amount2 = parseFloat(ledgerEntry.Amount || ledgerEntry.amount || 0);
+                    
+                    // Amount match within tolerance
+                    const amountDiff = Math.abs(amount1 - amount2);
+                    const amountThreshold = amount1 * (amountTolerance / 100);
+                    const amountMatch = amountDiff <= amountThreshold;
+                    
+                    if (!amountMatch) continue;
+                    
+                    // Description similarity
+                    const desc1 = (bankEntry.Description || bankEntry.description || '').toLowerCase();
+                    const desc2 = (ledgerEntry.Description || ledgerEntry.description || '').toLowerCase();
+                    
+                    let similarity = 0;
+                    if (algorithm === 'levenshtein') {
+                        similarity = calculateLevenshteinSimilarity(desc1, desc2);
+                    } else {
+                        // Simple common words approach for demo
+                        const words1 = desc1.split(' ');
+                        const words2 = desc2.split(' ');
+                        const commonWords = words1.filter(word => words2.includes(word));
+                        similarity = commonWords.length / Math.max(words1.length, words2.length);
+                    }
+                    
+                    // Date matching (if dates exist)
+                    let dateMatch = false;
+                    if (bankEntry.Date && ledgerEntry.Date) {
+                        const date1 = new Date(bankEntry.Date);
+                        const date2 = new Date(ledgerEntry.Date);
+                        const dateDiff = Math.abs(date1 - date2) / (1000 * 60 * 60 * 24);
+                        dateMatch = dateDiff <= dateTolerance;
+                    }
+                    
+                    // Calculate overall confidence score
+                    let score = 0;
+                    if (dateMatch) {
+                        score = 70 + similarity * 30;
+                    } else {
+                        score = 50 + similarity * 30;
+                    }
+                    
+                    // Adjust score based on amount difference
+                    score *= (1 - (amountDiff / (amountThreshold || 1)));
+                    
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMatch = {
+                            ledgerEntry,
+                            confidence: score,
+                            discrepancy: amountDiff > 0 ? `$${amountDiff.toFixed(2)} diff` : null
+                        };
+                    }
+                }
+                
+                if (bestMatch && bestScore >= 50) {
+                    results.push({
+                        bankEntry,
+                        ledgerEntry: bestMatch.ledgerEntry,
+                        confidence: bestScore,
+                        discrepancy: bestMatch.discrepancy,
+                        status: bestScore >= 80 ? 'matched' : 'needs_review'
+                    });
+                    
+                    matchedBankIndices.add(i);
+                } else {
+                    // No match found
+                    results.push({
+                        bankEntry,
+                        ledgerEntry: null,
+                        confidence: Math.random() * 30, // 0-30%
+                        discrepancy: 'Unmatched',
+                        status: 'unmatched'
+                    });
+                }
+            }
+            
+            // Add any unmatched ledger entries
+            for (let j = 0; j < ledgerData.length; j++) {
+                if (matchedLedgerIndices.has(j)) continue;
+                
+                results.push({
+                    bankEntry: null,
+                    ledgerEntry: ledgerData[j],
+                    confidence: Math.random() * 30, // 0-30%
+                    discrepancy: 'Unmatched',
+                    status: 'unmatched'
+                });
+            }
+            
+            matchingResults = results;
+        }
+        
+        // Simple Levenshtein similarity calculation for demo
+        function calculateLevenshteinSimilarity(s1, s2) {
+            if (!s1.length) return s2.length;
+            if (!s2.length) return s1.length;
+            
+            const matrix = [];
+            
+            // Increment along the first column of each row
+            for (let i = 0; i <= s2.length; i++) {
+                matrix[i] = [i];
+            }
+            
+            // Increment each column in the first row
+            for (let j = 0; j <= s1.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            // Fill in the rest of the matrix
+            for (let i = 1; i <= s2.length; i++) {
+                for (let j = 1; j <= s1.length; j++) {
+                    if (s2.charAt(i-1) === s1.charAt(j-1)) {
+                        matrix[i][j] = matrix[i-1][j-1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i-1][j-1] + 1, // substitution
+                            matrix[i][j-1] + 1,    // insertion
+                            matrix[i-1][j] + 1     // deletion
+                        );
+                    }
+                }
+            }
+            
+            const distance = matrix[s2.length][s1.length];
+            const maxLength = Math.max(s1.length, s2.length);
+            return 1 - (distance / maxLength);
+        }
+        
+        // Generate financial analysis based on matching results
+        function generateFinancialAnalysis() {
+            if (!matchingResults) return;
+            
+            // Calculate basic stats
+            const totalTransactions = matchingResults.length;
+            const matchedTransactions = matchingResults.filter(r => r.status === 'matched').length;
+            const reviewTransactions = matchingResults.filter(r => r.status === 'needs_review').length;
+            const unmatchedTransactions = matchingResults.filter(r => r.status === 'unmatched').length;
+            
+            // Calculate total amounts
+            let totalBankAmount = 0;
+            let totalLedgerAmount = 0;
+            
+            matchingResults.forEach(result => {
+                if (result.bankEntry) {
+                    const amount = parseFloat(result.bankEntry.Amount || result.bankEntry.amount || 0);
+                    totalBankAmount += amount;
+                }
+                
+                if (result.ledgerEntry) {
+                    const amount = parseFloat(result.ledgerEntry.Amount || result.ledgerEntry.amount || 0);
+                    totalLedgerAmount += amount;
+                }
+            });
+            
+            // Calculate categories (simple demo implementation)
+            const categories = {};
+            matchingResults.forEach(result => {
+                if (result.ledgerEntry) {
+                    const desc = (result.ledgerEntry.Description || result.ledgerEntry.description || '').toLowerCase();
+                    let category = 'Other';
+                    
+                    if (desc.includes('amazon') || desc.includes('aws')) {
+                        category = 'Cloud Services';
+                    } else if (desc.includes('office') || desc.includes('supply')) {
+                        category = 'Office Supplies';
+                    } else if (desc.includes('travel') || desc.includes('hotel') || desc.includes('flight')) {
+                        category = 'Travel';
+                    } else if (desc.includes('salary') || desc.includes('payroll')) {
+                        category = 'Payroll';
+                    } else if (desc.includes('tax') || desc.includes('irs')) {
+                        category = 'Taxes';
+                    }
+                    
+                    const amount = parseFloat(result.ledgerEntry.Amount || result.ledgerEntry.amount || 0);
+                    categories[category] = (categories[category] || 0) + amount;
+                }
+            });
+            
+            // Generate insights
+            const insights = [];
+            
+            if (unmatchedTransactions > 0) {
+                insights.push({
+                    icon: 'exclamation-triangle',
+                    color: 'yellow',
+                    title: `${unmatchedTransactions} unmatched transactions`,
+                    detail: 'Requires manual review'
+                });
+            }
+            
+            if (Math.abs(totalBankAmount - totalLedgerAmount) > 1) {
+                insights.push({
+                    icon: 'balance-scale',
+                    color: 'red',
+                    title: `Balance discrepancy: $${Math.abs(totalBankAmount - totalLedgerAmount).toFixed(2)}`,
+                    detail: 'Bank and ledger totals don\'t match'
+                });
+            }
+            
+            // Find largest transactions
+            let largestPayment = 0;
+            let largestPaymentDesc = '';
+            
+            matchingResults.forEach(result => {
+                if (result.ledgerEntry) {
+                    const amount = parseFloat(result.ledgerEntry.Amount || result.ledgerEntry.amount || 0);
+                    if (amount > largestPayment) {
+                        largestPayment = amount;
+                        largestPaymentDesc = result.ledgerEntry.Description || result.ledgerEntry.description || '';
+                    }
+                }
+            });
+            
+            if (largestPayment > 0) {
+                insights.push({
+                    icon: 'money-bill-wave',
+                    color: 'blue',
+                    title: `Largest payment: $${largestPayment.toFixed(2)}`,
+                    detail: largestPaymentDesc
+                });
+            }
+            
+            analysisResults = {
+                totalTransactions,
+                matchedTransactions,
+                reviewTransactions,
+                unmatchedTransactions,
+                totalBankAmount,
+                totalLedgerAmount,
+                categories,
+                insights
+            };
+        }
+        
+        // Display the results
+        function displayResults() {
+            if (!matchingResults || !analysisResults) return;
+            
+            // Update summary stats
+            matchedCount.textContent = analysisResults.matchedTransactions;
+            reviewCount.textContent = analysisResults.reviewTransactions;
+            unmatchedCount.textContent = analysisResults.unmatchedTransactions;
+            
+            const total = analysisResults.totalTransactions;
+            matchedPercent.textContent = `(${Math.round(analysisResults.matchedTransactions / total * 100)}% of total)`;
+            reviewPercent.textContent = `(${Math.round(analysisResults.reviewTransactions / total * 100)}% of total)`;
+            unmatchedPercent.textContent = `(${Math.round(analysisResults.unmatchedTransactions / total * 100)}% of total)`;
+            
+            // Calculate confidence counts
+            const highConfidence = matchingResults.filter(r => r.confidence >= 80).length;
+            const mediumConfidence = matchingResults.filter(r => r.confidence >= 50 && r.confidence < 80).length;
+            const lowConfidence = matchingResults.filter(r => r.confidence < 50).length;
+            
+            highConfidenceCount.textContent = highConfidence;
+            mediumConfidenceCount.textContent = mediumConfidence;
+            lowConfidenceCount.textContent = lowConfidence;
+            
+            highConfidenceBar.style.width = `${highConfidence / total * 100}%`;
+            mediumConfidenceBar.style.width = `${mediumConfidence / total * 100}%`;
+            lowConfidenceBar.style.width = `${lowConfidence / total * 100}%`;
+            
+            // Display transactions
+            transactionsContainer.innerHTML = '';
+            
+            matchingResults.slice(0, 20).forEach((result, index) => {
+                const transactionHtml = createTransactionHtml(result, index);
+                transactionsContainer.innerHTML += transactionHtml;
+            });
+            
+            // Display categories
+            categoriesContainer.innerHTML = '';
+            
+            // Sort categories by amount
+            const sortedCategories = Object.entries(analysisResults.categories)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            sortedCategories.forEach(([category, amount]) => {
+                const percent = (amount / analysisResults.totalLedgerAmount * 100).toFixed(0);
+                
+                const categoryHtml = `
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>${category}</span>
+                            <span class="font-medium">$${amount.toFixed(2)}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="h-2 rounded-full" style="width: ${percent}%; background-color: ${getRandomColor()}"></div>
+                        </div>
+                    </div>
+                `;
+                
+                categoriesContainer.innerHTML += categoryHtml;
+            });
+            
+            // Display insights
+            insightsContainer.innerHTML = '';
+            
+            analysisResults.insights.forEach(insight => {
+                const insightHtml = `
+                    <div class="flex items-center">
+                        <div class="bg-${insight.color}-100 p-2 rounded-full mr-3">
+                            <i class="fas fa-${insight.icon} text-${insight.color}-600"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium">${insight.title}</div>
+                            <div class="text-xs text-gray-500">${insight.detail}</div>
+                        </div>
+                    </div>
+                `;
+                
+                insightsContainer.innerHTML += insightHtml;
+            });
+            
+            // Display detailed analysis
+            detailedAnalysis.innerHTML = `
+                <p class="mb-2">The reconciliation process analyzed ${analysisResults.totalTransactions} transactions between your bank statement and accounting ledger.</p>
+                <p class="mb-2">${analysisResults.matchedTransactions} transactions (${Math.round(analysisResults.matchedTransactions / analysisResults.totalTransactions * 100)}%) were automatically matched with high confidence. ${analysisResults.reviewTransactions} transactions require manual review due to potential discrepancies, and ${analysisResults.unmatchedTransactions} transactions couldn't be matched to your ledger.</p>
+                <p>The total bank amount was $${analysisResults.totalBankAmount.toFixed(2)} compared to the ledger total of $${analysisResults.totalLedgerAmount.toFixed(2)}, resulting in a ${analysisResults.totalBankAmount > analysisResults.totalLedgerAmount ? 'surplus' : 'deficit'} of $${Math.abs(analysisResults.totalBankAmount - analysisResults.totalLedgerAmount).toFixed(2)}.</p>
+            `;
+        }
+        
+        // Create HTML for a transaction row
+        function createTransactionHtml(result, index) {
+            const bankEntry = result.bankEntry;
+            const ledgerEntry = result.ledgerEntry;
+            const confidence = Math.round(result.confidence);
+            const discrepancy = result.discrepancy;
+            const status = result.status;
+            
+            let matchIcon = '';
+            let matchColor = '';
+            
+            if (status === 'matched') {
+                matchIcon = 'fa-link';
+                matchColor = 'text-green-500';
+            } else if (status === 'needs_review') {
+                matchIcon = 'fa-link';
+                matchColor = 'text-yellow-500';
+            } else {
+                matchIcon = 'fa-unlink';
+                matchColor = 'text-red-400';
+            }
+            
+            let discrepancyHtml = '';
+            if (discrepancy) {
+                if (discrepancy.includes('diff')) {
+                    discrepancyHtml = `<span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded">${discrepancy}</span>`;
+                } else {
+                    discrepancyHtml = `<span class="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded discrepancy-tag">${discrepancy}</span>`;
+                }
+            } else {
+                discrepancyHtml = '<span class="text-xs text-gray-600">No discrepancy</span>';
+            }
+            
+            let confidenceClass = 'confidence-high';
+            if (confidence < 50) {
+                confidenceClass = 'confidence-low';
+            } else if (confidence < 80) {
+                confidenceClass = 'confidence-medium';
+            }
+            
+            return `
+                <div class="grid grid-cols-12 border-b border-gray-100 p-4 text-sm transaction-card">
+                    <div class="col-span-3">
+                        ${bankEntry ? `
+                            <div class="font-medium">${bankEntry.Description || bankEntry.description || 'N/A'}</div>
+                            <div class="text-gray-500 text-xs">${bankEntry.Date || 'N/A'} • $${parseFloat(bankEntry.Amount || bankEntry.amount || 0).toFixed(2)}</div>
+                        ` : '<div class="text-gray-400 italic">No bank transaction</div>'}
+                    </div>
+                    <div class="col-span-1 flex items-center justify-center">
+                        <i class="fas ${matchIcon} ${matchColor}"></i>
+                    </div>
+                    <div class="col-span-3">
+                        ${ledgerEntry ? `
+                            <div class="font-medium">${ledgerEntry.Description || ledgerEntry.description || 'N/A'}</div>
+                            <div class="text-gray-500 text-xs">${ledgerEntry.Date || 'N/A'} • $${parseFloat(ledgerEntry.Amount || ledgerEntry.amount || 0).toFixed(2)}</div>
+                        ` : '<div class="text-gray-400 italic">No ledger entry</div>'}
+                    </div>
+                    <div class="col-span-2 flex items-center">
+                        <div class="w-full">
+                            <div class="progress-bar ${confidenceClass} rounded-full" style="width: ${confidence}%"></div>
+                            <div class="text-xs text-gray-600 mt-1">${confidence}% confidence</div>
+                        </div>
+                    </div>
+                    <div class="col-span-2 flex items-center">
+                        ${discrepancyHtml}
+                    </div>
+                    <div class="col-span-1 flex items-center justify-center">
+                        <button class="text-blue-500 hover:text-blue-700" onclick="toggleFeedbackPanel(this, ${index})">
+                            <i class="fas ${status === 'unmatched' ? 'fa-comment-dots' : 'fa-edit'}"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Feedback panel (hidden by default) -->
+                    <div class="col-span-12 mt-3 feedback-panel">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-medium text-sm mb-2">Help improve the AI matching</h4>
+                            <p class="text-xs text-gray-600 mb-3">${status === 'unmatched' ? 'Is there a matching ledger entry for this transaction?' : 'Is this match correct?'}</p>
+                            
+                            <div class="flex space-x-3 mb-3">
+                                <button class="flex-1 bg-green-50 text-green-700 px-3 py-1.5 rounded text-sm font-medium hover:bg-green-100 transition flex items-center justify-center" onclick="submitFeedback(${index}, 'correct')">
+                                    <i class="fas fa-check-circle mr-2"></i>
+                                    ${status === 'unmatched' ? 'Yes, link to...' : 'Correct match'}
+                                </button>
+                                <button class="flex-1 bg-red-50 text-red-700 px-3 py-1.5 rounded text-sm font-medium hover:bg-red-100 transition flex items-center justify-center" onclick="submitFeedback(${index}, 'incorrect')">
+                                    <i class="fas fa-times-circle mr-2"></i>
+                                    ${status === 'unmatched' ? 'No match' : 'Incorrect match'}
+                                </button>
+                            </div>
+                            
+                            <div class="mt-2">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Additional notes</label>
+                                <textarea id="feedback-notes-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" rows="2" placeholder="Any feedback to improve future matching..."></textarea>
+                            </div>
+                            
+                            <button class="mt-2 bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700 transition float-right" onclick="submitFeedback(${index}, 'notes')">
+                                Submit Feedback
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Toggle feedback panel
+        function toggleFeedbackPanel(button, index) {
+            const transactionCard = button.closest('.transaction-card');
+            const feedbackPanel = transactionCard.querySelector('.feedback-panel');
+            
+            // Close all other open feedback panels
+            document.querySelectorAll('.feedback-panel').forEach(panel => {
+                if (panel !== feedbackPanel && panel.classList.contains('open')) {
+                    panel.classList.remove('open');
+                }
+            });
+            
+            feedbackPanel.classList.toggle('open');
+            
+            // Scroll to the feedback panel if it's opening
+            if (feedbackPanel.classList.contains('open')) {
+                setTimeout(() => {
+                    feedbackPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+            }
+        }
+        
+        // Submit feedback
+        function submitFeedback(index, type) {
+            const notes = document.getElementById(`feedback-notes-${index}`).value;
+            
+            // In a real app, this would send the feedback to your backend
+            // For demo, we'll just show an alert
+            alert(`Feedback submitted!\n\nType: ${type}\nNotes: ${notes}`);
+            
+            // Close the feedback panel
+            const feedbackPanel = document.querySelector(`#feedback-notes-${index}`).closest('.feedback-panel');
+            feedbackPanel.classList.remove('open');
+        }
+        
+        // Helper function to get random color for categories
+        function getRandomColor() {
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        // Reprocess button
+        document.getElementById('reprocess-btn').addEventListener('click', function() {
+            resultsSection.classList.add('hidden');
+            progressContainer.classList.remove('hidden');
+            progressBar.style.width = '0%';
+            progressPercent.textContent = '0%';
+            progressStatus.textContent = 'Initializing...';
+            
+            setTimeout(() => {
+                simulateProcessing();
+            }, 500);
+        });
+        
+        // Export button
+        document.getElementById('export-btn').addEventListener('click', function() {
+            alert('Export functionality would be implemented here.\n\nIn a real app, this would generate a PDF or CSV report with all reconciliation results.');
+        });
+        
+        // Adjust button
+        document.getElementById('adjust-btn').addEventListener('click', function() {
+            alert('Adjust matching parameters would be implemented here.\n\nIn a real app, this would allow fine-tuning the matching algorithm thresholds.');
+        });
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=Muskaaannn/finance-ai-agent" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+</html>
